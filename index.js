@@ -5,11 +5,26 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Replace this with your actual Google Apps Script Web App URL
-const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxg2eToj7DT34g9UeY5Z5jo5ECaeAKBUgzVkdckneBFdEx_VYzP1E7QWoy21NvkfqlJ/exec';
+// Replace with your real Apps Script URL
+const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/YOUR-SCRIPT-ID/exec';
 
-app.use(cors());
+// ✅ 1. Enable CORS properly
+app.use(cors({
+  origin: '*',  // Allow any domain
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}));
+
+// ✅ 2. Express body parser
 app.use(express.json());
+
+app.options('/submit', (req, res) => {
+  // ✅ 3. Handle preflight manually if needed
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.status(204).send('');
+});
 
 app.post('/submit', async (req, res) => {
   try {
@@ -23,9 +38,11 @@ app.post('/submit', async (req, res) => {
 
     try {
       const data = JSON.parse(text);
+      res.set('Access-Control-Allow-Origin', '*');
       res.json(data);
     } catch (parseError) {
       console.error('Failed to parse JSON from Apps Script:', text);
+      res.set('Access-Control-Allow-Origin', '*');
       res.status(502).json({
         status: 'error',
         message: 'Invalid JSON from Google Apps Script',
@@ -35,6 +52,7 @@ app.post('/submit', async (req, res) => {
 
   } catch (error) {
     console.error('Proxy error:', error);
+    res.set('Access-Control-Allow-Origin', '*');
     res.status(500).json({
       status: 'error',
       message: error.message
