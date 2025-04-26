@@ -5,27 +5,27 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Replace with your real Apps Script URL
+// Replace this with your actual Google Apps Script Web App URL
 const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/YOUR-SCRIPT-ID/exec';
 
-// ✅ 1. Enable CORS properly
+// ✅ Correct CORS Setup
 app.use(cors({
-  origin: '*',  // Allow any domain
+  origin: '*', // Allow any origin
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type']
 }));
 
-// ✅ 2. Express body parser
 app.use(express.json());
 
+// ✅ Handle preflight OPTIONS manually
 app.options('/submit', (req, res) => {
-  // ✅ 3. Handle preflight manually if needed
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
-  res.status(204).send('');
+  res.status(204).send(''); // No Content
 });
 
+// ✅ Main POST Handler
 app.post('/submit', async (req, res) => {
   try {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
