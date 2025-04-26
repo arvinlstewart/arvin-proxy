@@ -5,27 +5,29 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Replace this with your actual Google Apps Script Web App URL
+// Replace with your actual Google Apps Script Web App URL
 const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || 'https://script.google.com/macros/s/YOUR-SCRIPT-ID/exec';
 
-// ✅ Correct CORS Setup
+// 1️⃣ GLOBAL CORS
 app.use(cors({
-  origin: '*', // Allow any origin
+  origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type']
+  allowedHeaders: ['Content-Type'],
+  optionsSuccessStatus: 204
 }));
 
+// 2️⃣ BODY PARSER
 app.use(express.json());
 
-// ✅ Handle preflight OPTIONS manually
+// 3️⃣ EXPLICIT PRE-FLIGHT OPTIONS HANDLER
 app.options('/submit', (req, res) => {
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-  res.status(204).send(''); // No Content
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.status(204).send();
 });
 
-// ✅ Main POST Handler
+// 4️⃣ MAIN FORM SUBMISSION HANDLER
 app.post('/submit', async (req, res) => {
   try {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -38,11 +40,11 @@ app.post('/submit', async (req, res) => {
 
     try {
       const data = JSON.parse(text);
-      res.set('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.json(data);
     } catch (parseError) {
       console.error('Failed to parse JSON from Apps Script:', text);
-      res.set('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Origin', '*');
       res.status(502).json({
         status: 'error',
         message: 'Invalid JSON from Google Apps Script',
@@ -52,7 +54,7 @@ app.post('/submit', async (req, res) => {
 
   } catch (error) {
     console.error('Proxy error:', error);
-    res.set('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.status(500).json({
       status: 'error',
       message: error.message
@@ -60,6 +62,7 @@ app.post('/submit', async (req, res) => {
   }
 });
 
+// 5️⃣ START SERVER
 app.listen(PORT, () => {
-  console.log(`Proxy server running on http://localhost:${PORT}`);
+  console.log(`Proxy server running on port ${PORT}`);
 });
